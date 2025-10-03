@@ -43,50 +43,74 @@ def test_device(ui, cam, motor):
         print(f"[ERROR] Test Device failed: {e}")
         time.sleep(3)
 
-def config_settings(ui, buttons):
+def config_settings(ui, buttons, motor, screen_on):
     config_menu = ["WiFi Config", "Bluetooth Config", "Back"]
     idx = 0
 
     while True:
-        ui.show_menu(config_menu, selected=idx)
+        if screen_on:
+            ui.show_menu(config_menu, selected=idx)
+
         event = buttons.wait_for_event()
         print(f"[DEBUG] Config menu event: {event}")
 
-        if event == "click":
+        if event == "double":
+            screen_on = not screen_on
+            if not screen_on:
+                ui.clear()
+                print("[DEBUG] Screen turned off")
+            else:
+                ui.show_menu(config_menu, selected=idx)
+                print("[DEBUG] Screen turned on")
+
+        elif event == "click" and screen_on:
             idx = (idx + 1) % len(config_menu)
-            ui.show_menu(config_menu, selected=idx)  # redraw
-        elif event == "hold":
+            ui.show_menu(config_menu, selected=idx)
+
+        elif event == "hold" and screen_on:
             choice = config_menu[idx]
             ui.show_message(f"Selected:\n{choice}")
             print(f"[DEBUG] Config menu selected: {choice}")
             time.sleep(0.5)
             if choice == "WiFi Config":
-                config_wifi(ui, buttons)
+                config_wifi(ui, buttons, screen_on)
             elif choice == "Bluetooth Config":
                 bluetooth_config.run(ui, buttons)
             elif choice == "Back":
-                return
+                return screen_on
 
-def config_wifi(ui, buttons):
+def config_wifi(ui, buttons, screen_on):
     profiles = wifi.load_profiles()
     if not profiles:
-        ui.show_message("No wifi profiles")
+        if screen_on:
+            ui.show_message("No wifi profiles")
         print("[WARN] No WiFi profiles found")
         time.sleep(2)
         return
 
     idx = 0
     while True:
-        profile_names = [p["network_name"] for p in profiles]
-        ui.show_menu(profile_names, selected=idx)
+        if screen_on:
+            profile_names = [p["network_name"] for p in profiles]
+            ui.show_menu(profile_names, selected=idx)
 
         event = buttons.wait_for_event()
         print(f"[DEBUG] WiFi config event: {event}")
 
-        if event == "click":
+        if event == "double":
+            screen_on = not screen_on
+            if not screen_on:
+                ui.clear()
+                print("[DEBUG] Screen turned off")
+            else:
+                ui.show_menu(profile_names, selected=idx)
+                print("[DEBUG] Screen turned on")
+
+        elif event == "click" and screen_on:
             idx = (idx + 1) % len(profiles)
             ui.show_menu(profile_names, selected=idx)
-        elif event == "hold":
+
+        elif event == "hold" and screen_on:
             chosen = profiles[idx]
             print(f"[DEBUG] Attempting WiFi connect: {chosen}")
             success, msg = wifi.connect(chosen)
@@ -94,30 +118,62 @@ def config_wifi(ui, buttons):
                 ui.show_message(f"Connected:\n{chosen['network_name']}")
                 print("[DEBUG] WiFi connected successfully")
                 time.sleep(2)
-                return
+                return screen_on
             else:
                 ui.show_message("Failed WiFi")
                 print(f"[ERROR] WiFi failed: {msg}")
                 time.sleep(2)
 
-def photo_loop(ui, buttons, cam, motor):
+def photo_loop(ui, buttons, cam, motor, screen_on):
     while True:
-        ui.show_message("Photo Mode")
+        if screen_on:
+            ui.show_message("Photo Mode")
+
         event = buttons.wait_for_event()
         print(f"[DEBUG] Photo loop event: {event}")
 
-        if event == "click":
+        if event == "double":
+            screen_on = not screen_on
+            if not screen_on:
+                ui.clear()
+                print("[DEBUG] Screen turned off")
+            else:
+                ui.show_message("Photo Mode")
+                print("[DEBUG] Screen turned on")
+
+        elif event == "click" and screen_on:
             filename = cam.capture(TEMP_DIR)
             ui.show_message(f"Saved:\n{os.path.basename(filename)}")
+            motor.buzz(duration=0.2, strength=0.5)  # feedback on photo
             print(f"[DEBUG] Photo saved: {filename}")
-        elif event == "hold":
+
+        elif event == "hold" and screen_on:
             ui.show_message("Sending...")
             print("[DEBUG] Sending photos to ChatGPT...")
             result = send_to_chatgpt(TEMP_DIR)
             move_temp_to_main()
             ui.show_message(f"Result:\n{result}")
-            motor.buzz(duration=0.3, strength=0.6)
+            motor.buzz(duration=0.4, strength=0.7)  # feedback on response
             print(f"[DEBUG] ChatGPT result: {result}")
+
+            # Wait until user clicks to continue
+            while True:
+                next_event = buttons.wait_for_event()
+                if next_event == "click":
+                    ui.show_message("Photo Mode")
+                    print("[DEBUG] User acknowledged result")
+                    break
+                elif next_event == "double":
+                    screen_on = not screen_on
+                    if not screen_on:
+                        ui.clear()
+                        print("[DEBUG] Screen turned off (while result showing)")
+                    else:
+                        ui.show_message(f"Result:\n{result}")
+                        print("[DEBUG] Screen turned on (showing result again)")
+
+        # Return updated state
+        return screen_on
 
 # ---------------- MAIN MENU ---------------- #
 
@@ -129,19 +185,32 @@ def main():
 
     menu = ["Test Device", "Config Settings", "Start"]
     idx = 0
+    screen_on = True
 
     print("[DEBUG] Entering main loop...")
 
     while True:
-        ui.show_menu(menu, selected=idx)
+        if screen_on:
+            ui.show_menu(menu, selected=idx)
+
         event = buttons.wait_for_event()
         print(f"[DEBUG] Main menu event: {event}")
 
-        if event == "click":
+        if event == "double":
+            screen_on = not screen_on
+            if not screen_on:
+                ui.clear()
+                print("[DEBUG] Screen turned off")
+            else:
+                ui.show_menu(menu, selected=idx)
+                print("[DEBUG] Screen turned on")
+
+        elif event == "click" and screen_on:
             idx = (idx + 1) % len(menu)
-            ui.show_menu(menu, selected=idx)  # redraw
+            ui.show_menu(menu, selected=idx)
             print(f"[DEBUG] Menu index changed to {idx}")
-        elif event == "hold":
+
+        elif event == "hold" and screen_on:
             choice = menu[idx]
             ui.show_message(f"Selected:\n{choice}")
             print(f"[DEBUG] Menu choice selected: {choice}")
@@ -149,11 +218,11 @@ def main():
             if choice == "Test Device":
                 test_device(ui, cam, motor)
             elif choice == "Config Settings":
-                config_settings(ui, buttons)
+                screen_on = config_settings(ui, buttons, motor, screen_on)
             elif choice == "Start":
                 ui.show_message("System Ready")
                 print("[DEBUG] Entering photo loop...")
-                photo_loop(ui, buttons, cam, motor)
+                screen_on = photo_loop(ui, buttons, cam, motor, screen_on)
 
 if __name__ == "__main__":
     main()
