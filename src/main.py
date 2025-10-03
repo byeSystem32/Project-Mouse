@@ -22,7 +22,6 @@ def move_temp_to_main():
 # ---------------- MENU HANDLERS ---------------- #
 
 def test_device(ui, cam, motor):
-    """Tests camera + motor"""
     try:
         ui.show_message("Testing Camera...")
         filename = cam.capture(TEMP_DIR)
@@ -39,7 +38,6 @@ def test_device(ui, cam, motor):
         time.sleep(3)
 
 def config_wifi(ui, buttons):
-    """WiFi profile selector"""
     profiles = wifi.load_profiles()
     if not profiles:
         ui.show_message("No wifi profiles")
@@ -48,16 +46,18 @@ def config_wifi(ui, buttons):
 
     idx = 0
     while True:
-        profile = profiles[idx]
-        ui.show_message(f"WiFi:\n{profile['network_name']}")
+        # Show wifi profile list with scroll
+        profile_names = [p["network_name"] for p in profiles]
+        ui.show_menu(profile_names, selected=idx)
 
         event = buttons.wait_for_event()
         if event == "short_press":
             idx = (idx + 1) % len(profiles)
         elif event == "long_press":
-            success, msg = wifi.connect(profile)
+            chosen = profiles[idx]
+            success, msg = wifi.connect(chosen)
             if success:
-                ui.show_message(f"Connected:\n{profile['network_name']}")
+                ui.show_message(f"Connected:\n{chosen['network_name']}")
                 time.sleep(2)
                 return
             else:
@@ -65,7 +65,6 @@ def config_wifi(ui, buttons):
                 time.sleep(2)
 
 def photo_loop(ui, buttons, cam, motor):
-    """Main photo-taking loop"""
     while True:
         event = buttons.wait_for_event()
 
@@ -95,7 +94,7 @@ def main():
     idx = 0
 
     while True:
-        ui.show_message(f"> {menu[idx]}")  # ">" = indicator
+        ui.show_menu(menu, selected=idx)
 
         event = buttons.wait_for_event()
         if event == "short_press":
