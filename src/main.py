@@ -1,5 +1,5 @@
 import os, shutil, time
-from controller import ControllerHandler   # use controller instead of GPIO buttons
+from input_handler import InputHandler   # unified button/controller handler
 from camera import Camera
 from chatgpt import send_to_chatgpt
 from ui import MenuUI
@@ -107,7 +107,9 @@ def photo_loop(ui, buttons, cam, motor):
 # ---------------- MAIN MENU ---------------- #
 
 def main():
-    buttons = ControllerHandler(hold_time=1.5)
+    # InputHandler will try controller first, fall back to GPIO buttons
+    buttons = InputHandler(hold_time=1.5, button_pin=17)
+
     cam = Camera()
     ui = MenuUI()
     motor = Motor(pin=18)
