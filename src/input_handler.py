@@ -1,26 +1,18 @@
 from buttons import ButtonHandler
-
-try:
-    from controller import ControllerHandler
-    HAS_CONTROLLER = True
-except ImportError:
-    HAS_CONTROLLER = False
+from controller import ControllerHandler
 
 class InputHandler:
-    def __init__(self, hold_time=1.5, button_pin=17):
-        self.device = None
+    def __init__(self, hold_time=1.5):
+        self.hold_time = hold_time
 
-        if HAS_CONTROLLER:
-            try:
-                self.device = ControllerHandler(hold_time=hold_time)
-                print("[DEBUG] Controller detected, using controller input")
-            except Exception as e:
-                print(f"[WARN] Controller init failed: {e}")
-                self.device = None
-
-        if self.device is None:
-            self.device = ButtonHandler(pin=button_pin, hold_time=hold_time)
-            print("[DEBUG] Using GPIO button input")
+        # Try controller first
+        try:
+            self.device = ControllerHandler(hold_time=hold_time, device_path="/dev/input/event2")
+            print("[DEBUG] Using controller input (event2)")
+        except Exception as e:
+            print(f"[WARN] Controller not available: {e}")
+            self.device = ButtonHandler(pin=23, hold_time=hold_time)
+            print("[DEBUG] Using GPIO button input (GPIO23)")
 
     def wait_for_event(self):
         event = self.device.wait_for_event()

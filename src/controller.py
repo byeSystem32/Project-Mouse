@@ -1,22 +1,12 @@
 import time
-from evdev import InputDevice, categorize, ecodes, list_devices
+from evdev import InputDevice, categorize, ecodes
 
 class ControllerHandler:
-    def __init__(self, hold_time=1.5, device_name="Pro Controller"):
+    def __init__(self, hold_time=1.5, device_path="/dev/input/event2"):
         self.hold_time = hold_time
         self.last_press_time = {}
-        self.device = None
-
-        # Find controller device by name
-        for path in list_devices():
-            dev = InputDevice(path)
-            if device_name in dev.name:
-                self.device = dev
-                print(f"[DEBUG] Controller connected: {dev.name} ({path})")
-                break
-
-        if not self.device:
-            raise RuntimeError("Controller not found! Check Bluetooth connection.")
+        self.device = InputDevice(device_path)
+        print(f"[DEBUG] Controller connected: {self.device.name} ({device_path})")
 
     def wait_for_event(self):
         for event in self.device.read_loop():
@@ -26,24 +16,22 @@ class ControllerHandler:
                 state = key_event.keystate
                 print(f"[DEBUG] Controller raw event: {codes}, state={state}")
 
-                # Only react on button press (state == 1)
+                # Only handle button pressed (state==1)
                 if state != key_event.key_down:
                     continue
 
-                # A button (BTN_SOUTH) → select
+                # A button = select
                 if "BTN_SOUTH" in codes or "BTN_A" in codes:
-                    press_time = time.time()
-                    self.last_press_time["BTN_SOUTH"] = press_time
                     return "select"
 
-                # B button (BTN_EAST) → back
+                # B button = back
                 if "BTN_EAST" in codes or "BTN_B" in codes:
                     return "back"
 
-                # X button (BTN_NORTH) → down
+                # X button = down
                 if "BTN_NORTH" in codes or "BTN_X" in codes:
                     return "down"
 
-                # Y button (BTN_WEST) → up
+                # Y button = up
                 if "BTN_WEST" in codes or "BTN_Y" in codes:
                     return "up"

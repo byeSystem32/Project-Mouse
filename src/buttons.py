@@ -2,7 +2,7 @@ from gpiozero import Button
 import time
 
 class ButtonHandler:
-    def __init__(self, pin=17, hold_time=1.5):
+    def __init__(self, pin=23, hold_time=1.5):  # Default now GPIO23
         self.button = Button(pin, pull_up=True)
         self.hold_time = hold_time
 
