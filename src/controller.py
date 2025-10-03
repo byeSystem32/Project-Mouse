@@ -12,16 +12,12 @@ class ControllerHandler:
                 codes = key_event.keycode if isinstance(key_event.keycode, list) else [key_event.keycode]
                 state = key_event.keystate
 
-                # Only act on press down
                 if state != key_event.key_down:
                     continue
 
                 print(f"[DEBUG] Controller event: {codes}")
 
-                # Y button = click
                 if "BTN_WEST" in codes or "BTN_Y" in codes:
                     return "click"
-
-                # A button = hold
                 if "BTN_SOUTH" in codes or "BTN_A" in codes:
                     return "hold"

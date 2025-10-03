@@ -54,9 +54,12 @@ def config_settings(ui, buttons):
 
         if event == "click":
             idx = (idx + 1) % len(config_menu)
+            ui.show_menu(config_menu, selected=idx)  # redraw
         elif event == "hold":
             choice = config_menu[idx]
+            ui.show_message(f"Selected:\n{choice}")
             print(f"[DEBUG] Config menu selected: {choice}")
+            time.sleep(0.5)
             if choice == "WiFi Config":
                 config_wifi(ui, buttons)
             elif choice == "Bluetooth Config":
@@ -82,6 +85,7 @@ def config_wifi(ui, buttons):
 
         if event == "click":
             idx = (idx + 1) % len(profiles)
+            ui.show_menu(profile_names, selected=idx)
         elif event == "hold":
             chosen = profiles[idx]
             print(f"[DEBUG] Attempting WiFi connect: {chosen}")
@@ -135,10 +139,13 @@ def main():
 
         if event == "click":
             idx = (idx + 1) % len(menu)
+            ui.show_menu(menu, selected=idx)  # redraw
             print(f"[DEBUG] Menu index changed to {idx}")
         elif event == "hold":
             choice = menu[idx]
+            ui.show_message(f"Selected:\n{choice}")
             print(f"[DEBUG] Menu choice selected: {choice}")
+            time.sleep(0.5)
             if choice == "Test Device":
                 test_device(ui, cam, motor)
             elif choice == "Config Settings":
