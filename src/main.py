@@ -14,14 +14,12 @@ MAIN_DIR = os.path.join(BASE_DIR, "../photos/saved")
 os.makedirs(TEMP_DIR, exist_ok=True)
 os.makedirs(MAIN_DIR, exist_ok=True)
 
-
 def move_temp_to_main():
     for file in os.listdir(TEMP_DIR):
         src = os.path.join(TEMP_DIR, file)
         dst = os.path.join(MAIN_DIR, file)
         shutil.move(src, dst)
     print("[DEBUG] Moved temp photos to saved")
-
 
 # ---------------- MENU HANDLERS ---------------- #
 
@@ -45,7 +43,6 @@ def test_device(ui, cam, motor):
         print(f"[ERROR] Test Device failed: {e}")
         time.sleep(3)
 
-
 def config_settings(ui, buttons):
     config_menu = ["WiFi Config", "Bluetooth Config", "Back"]
     idx = 0
@@ -55,24 +52,17 @@ def config_settings(ui, buttons):
         event = buttons.wait_for_event()
         print(f"[DEBUG] Config menu event: {event}")
 
-        if event == "down":
+        if event == "click":
             idx = (idx + 1) % len(config_menu)
-        elif event == "up":
-            idx = (idx - 1) % len(config_menu)
-        elif event == "select":
+        elif event == "hold":
             choice = config_menu[idx]
             print(f"[DEBUG] Config menu selected: {choice}")
-
             if choice == "WiFi Config":
                 config_wifi(ui, buttons)
             elif choice == "Bluetooth Config":
                 bluetooth_config.run(ui, buttons)
             elif choice == "Back":
                 return
-        elif event == "back":
-            print("[DEBUG] Back pressed -> Returning to main menu")
-            return
-
 
 def config_wifi(ui, buttons):
     profiles = wifi.load_profiles()
@@ -90,11 +80,9 @@ def config_wifi(ui, buttons):
         event = buttons.wait_for_event()
         print(f"[DEBUG] WiFi config event: {event}")
 
-        if event == "down":
+        if event == "click":
             idx = (idx + 1) % len(profiles)
-        elif event == "up":
-            idx = (idx - 1) % len(profiles)
-        elif event == "select":
+        elif event == "hold":
             chosen = profiles[idx]
             print(f"[DEBUG] Attempting WiFi connect: {chosen}")
             success, msg = wifi.connect(chosen)
@@ -107,27 +95,18 @@ def config_wifi(ui, buttons):
                 ui.show_message("Failed WiFi")
                 print(f"[ERROR] WiFi failed: {msg}")
                 time.sleep(2)
-        elif event == "back":
-            print("[DEBUG] Back pressed -> Returning to Config Settings")
-            return
-
 
 def photo_loop(ui, buttons, cam, motor):
-    idx = 1
     while True:
-        ui.show_message(f"Photo Mode\nQ{idx}")
+        ui.show_message("Photo Mode")
         event = buttons.wait_for_event()
         print(f"[DEBUG] Photo loop event: {event}")
 
-        if event == "down":
-            idx += 1
-        elif event == "up" and idx > 1:
-            idx -= 1
-        elif event == "select":
+        if event == "click":
             filename = cam.capture(TEMP_DIR)
-            ui.show_message(f"Saved:\nQ{idx}\n{os.path.basename(filename)}")
+            ui.show_message(f"Saved:\n{os.path.basename(filename)}")
             print(f"[DEBUG] Photo saved: {filename}")
-        elif event == "back":
+        elif event == "hold":
             ui.show_message("Sending...")
             print("[DEBUG] Sending photos to ChatGPT...")
             result = send_to_chatgpt(TEMP_DIR)
@@ -136,11 +115,10 @@ def photo_loop(ui, buttons, cam, motor):
             motor.buzz(duration=0.3, strength=0.6)
             print(f"[DEBUG] ChatGPT result: {result}")
 
-
 # ---------------- MAIN MENU ---------------- #
 
 def main():
-    buttons = InputHandler(hold_time=1.5)
+    buttons = InputHandler(hold_time=2.0)
     cam = Camera()
     ui = MenuUI()
     motor = Motor(pin=18)
@@ -155,16 +133,12 @@ def main():
         event = buttons.wait_for_event()
         print(f"[DEBUG] Main menu event: {event}")
 
-        if event == "down":
+        if event == "click":
             idx = (idx + 1) % len(menu)
             print(f"[DEBUG] Menu index changed to {idx}")
-        elif event == "up":
-            idx = (idx - 1) % len(menu)
-            print(f"[DEBUG] Menu index changed to {idx}")
-        elif event == "select":
+        elif event == "hold":
             choice = menu[idx]
             print(f"[DEBUG] Menu choice selected: {choice}")
-
             if choice == "Test Device":
                 test_device(ui, cam, motor)
             elif choice == "Config Settings":
@@ -173,9 +147,6 @@ def main():
                 ui.show_message("System Ready")
                 print("[DEBUG] Entering photo loop...")
                 photo_loop(ui, buttons, cam, motor)
-        elif event == "back":
-            print("[DEBUG] Back pressed (ignored in main menu)")
-
 
 if __name__ == "__main__":
     main()

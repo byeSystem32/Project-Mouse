@@ -2,17 +2,14 @@ from buttons import ButtonHandler
 from controller import ControllerHandler
 
 class InputHandler:
-    def __init__(self, hold_time=1.5):
-        self.hold_time = hold_time
-
-        # Try controller first
+    def __init__(self, hold_time=2.0):
         try:
-            self.device = ControllerHandler(hold_time=hold_time, device_path="/dev/input/event2")
+            self.device = ControllerHandler(device_path="/dev/input/event2")
             print("[DEBUG] Using controller input (event2)")
         except Exception as e:
             print(f"[WARN] Controller not available: {e}")
-            self.device = ButtonHandler(pin=23, hold_time=hold_time)
-            print("[DEBUG] Using GPIO button input (GPIO23)")
+            self.device = ButtonHandler(pin=17, hold_time=hold_time)
+            print("[DEBUG] Using GPIO button input (GPIO17)")
 
     def wait_for_event(self):
         event = self.device.wait_for_event()

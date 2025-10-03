@@ -2,12 +2,11 @@ from gpiozero import Button
 import time
 
 class ButtonHandler:
-    def __init__(self, pin=23, hold_time=1.5):  # Default now GPIO23
+    def __init__(self, pin=17, hold_time=2.0):
         self.button = Button(pin, pull_up=True)
         self.hold_time = hold_time
 
     def wait_for_event(self):
-        print("[DEBUG] Waiting for GPIO button event...")
         self.button.wait_for_press()
         press_time = time.time()
         self.button.wait_for_release()
@@ -15,8 +14,8 @@ class ButtonHandler:
 
         held = release_time - press_time
         if held >= self.hold_time:
-            print(f"[DEBUG] GPIO button long press (select) held {held:.2f}s")
-            return "select"
+            print(f"[DEBUG] GPIO long hold detected ({held:.2f}s)")
+            return "hold"
         else:
-            print(f"[DEBUG] GPIO button short press (down) held {held:.2f}s")
-            return "down"
+            print(f"[DEBUG] GPIO single click detected ({held:.2f}s)")
+            return "click"
