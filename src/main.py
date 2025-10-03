@@ -1,10 +1,11 @@
 import os, shutil, time
-from buttons import ButtonHandler
+from controller import ControllerHandler   # use controller instead of GPIO buttons
 from camera import Camera
 from chatgpt import send_to_chatgpt
 from ui import MenuUI
 from motor import Motor
 import wifi
+import bluetooth_config
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 TEMP_DIR = os.path.join(BASE_DIR, "../photos/temp")
@@ -37,6 +38,28 @@ def test_device(ui, cam, motor):
         ui.show_message("Test Failed:\n" + str(e))
         time.sleep(3)
 
+def config_settings(ui, buttons):
+    """Submenu: Config Settings"""
+    config_menu = ["WiFi Config", "Bluetooth Config", "Back"]
+    idx = 0
+
+    while True:
+        ui.show_menu(config_menu, selected=idx)
+        event = buttons.wait_for_event()
+
+        if event == "short_press":
+            idx = (idx + 1) % len(config_menu)
+
+        elif event == "long_press":
+            choice = config_menu[idx]
+
+            if choice == "WiFi Config":
+                config_wifi(ui, buttons)
+            elif choice == "Bluetooth Config":
+                bluetooth_config.run(ui, buttons)
+            elif choice == "Back":
+                return
+
 def config_wifi(ui, buttons):
     profiles = wifi.load_profiles()
     if not profiles:
@@ -46,7 +69,6 @@ def config_wifi(ui, buttons):
 
     idx = 0
     while True:
-        # Show wifi profile list with scroll
         profile_names = [p["network_name"] for p in profiles]
         ui.show_menu(profile_names, selected=idx)
 
@@ -85,18 +107,18 @@ def photo_loop(ui, buttons, cam, motor):
 # ---------------- MAIN MENU ---------------- #
 
 def main():
-    buttons = ButtonHandler(pin=17, hold_time=2)
+    buttons = ControllerHandler(hold_time=1.5)
     cam = Camera()
     ui = MenuUI()
     motor = Motor(pin=18)
 
-    menu = ["Test Device", "Config WiFi", "Start"]
+    menu = ["Test Device", "Config Settings", "Start"]
     idx = 0
 
     while True:
         ui.show_menu(menu, selected=idx)
-
         event = buttons.wait_for_event()
+
         if event == "short_press":
             idx = (idx + 1) % len(menu)
 
@@ -106,8 +128,8 @@ def main():
             if choice == "Test Device":
                 test_device(ui, cam, motor)
 
-            elif choice == "Config WiFi":
-                config_wifi(ui, buttons)
+            elif choice == "Config Settings":
+                config_settings(ui, buttons)
 
             elif choice == "Start":
                 ui.show_message("System Ready")
