@@ -14,6 +14,9 @@ class ButtonHandler:
         release_time = time.time()
 
         held = release_time - press_time
-        event = "long_press" if held >= self.hold_time else "short_press"
-        print(f"[DEBUG] GPIO button event: {event} (held {held:.2f}s)")
-        return event
+        if held >= self.hold_time:
+            print(f"[DEBUG] GPIO button long press (select) held {held:.2f}s")
+            return "select"
+        else:
+            print(f"[DEBUG] GPIO button short press (down) held {held:.2f}s")
+            return "down"

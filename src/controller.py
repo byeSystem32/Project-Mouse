@@ -2,12 +2,12 @@ import time
 from evdev import InputDevice, categorize, ecodes, list_devices
 
 class ControllerHandler:
-    def __init__(self, hold_time=1.5, device_name="Pro Controller (IMU)"):
+    def __init__(self, hold_time=1.5, device_name="Pro Controller"):
         self.hold_time = hold_time
         self.last_press_time = {}
-
-        # Try to find the controller by name
         self.device = None
+
+        # Find controller device by name
         for path in list_devices():
             dev = InputDevice(path)
             if device_name in dev.name:
@@ -19,31 +19,31 @@ class ControllerHandler:
             raise RuntimeError("Controller not found! Check Bluetooth connection.")
 
     def wait_for_event(self):
-        print("[DEBUG] Waiting for controller event...")
         for event in self.device.read_loop():
             if event.type == ecodes.EV_KEY:
                 key_event = categorize(event)
-                code = key_event.keycode
-                print(f"[DEBUG] Raw controller event: {code}, state={key_event.keystate}")
+                codes = key_event.keycode if isinstance(key_event.keycode, list) else [key_event.keycode]
+                state = key_event.keystate
+                print(f"[DEBUG] Controller raw event: {codes}, state={state}")
 
-                # A button (BTN_SOUTH)
-                if code == "BTN_SOUTH":
-                    if key_event.keystate == key_event.key_down:
-                        self.last_press_time[code] = time.time()
-                    elif key_event.keystate == key_event.key_up:
-                        press_time = self.last_press_time.get(code, time.time())
-                        held = time.time() - press_time
-                        self.last_press_time[code] = None
-                        event_type = "long_press" if held >= self.hold_time else "short_press"
-                        print(f"[DEBUG] Controller event: {event_type} (held {held:.2f}s)")
-                        return event_type
+                # Only react on button press (state == 1)
+                if state != key_event.key_down:
+                    continue
 
-                # D-pad down = short_press
-                if code == "BTN_DPAD_DOWN" and key_event.keystate == key_event.key_down:
-                    print("[DEBUG] Controller D-pad down -> short_press")
-                    return "short_press"
+                # A button (BTN_SOUTH) → select
+                if "BTN_SOUTH" in codes or "BTN_A" in codes:
+                    press_time = time.time()
+                    self.last_press_time["BTN_SOUTH"] = press_time
+                    return "select"
 
-                # D-pad up = short_press (optional extra navigation)
-                if code == "BTN_DPAD_UP" and key_event.keystate == key_event.key_down:
-                    print("[DEBUG] Controller D-pad up -> short_press")
-                    return "short_press"
+                # B button (BTN_EAST) → back
+                if "BTN_EAST" in codes or "BTN_B" in codes:
+                    return "back"
+
+                # X button (BTN_NORTH) → down
+                if "BTN_NORTH" in codes or "BTN_X" in codes:
+                    return "down"
+
+                # Y button (BTN_WEST) → up
+                if "BTN_WEST" in codes or "BTN_Y" in codes:
+                    return "up"

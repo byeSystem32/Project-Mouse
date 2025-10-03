@@ -137,11 +137,15 @@ def main():
         event = buttons.wait_for_event()
         print(f"[DEBUG] Main menu event: {event}")
 
-        if event == "short_press":
+        if event == "down":
             idx = (idx + 1) % len(menu)
             print(f"[DEBUG] Menu index changed to {idx}")
 
-        elif event == "long_press":
+        elif event == "up":
+            idx = (idx - 1) % len(menu)
+            print(f"[DEBUG] Menu index changed to {idx}")
+
+        elif event == "select":
             choice = menu[idx]
             print(f"[DEBUG] Menu choice selected: {choice}")
 
@@ -153,6 +157,9 @@ def main():
                 ui.show_message("System Ready")
                 print("[DEBUG] Entering photo loop...")
                 photo_loop(ui, buttons, cam, motor)
+
+        elif event == "back":
+            print("[DEBUG] Back pressed (no action in main menu)")
 
 if __name__ == "__main__":
     main()
