@@ -1,0 +1,21 @@
+{
+    "exam_name": "Old ACT",
+    "sections": [
+      {
+        "section_name": "English",
+        "number_of_questions": "75"
+      },
+      {
+        "section_name": "Math",
+        "number_of_questions": "60"
+      },
+      {
+        "section_name": "Reading",
+        "number_of_questions": "40"
+      },
+      {
+        "section_name": "Science",
+        "number_of_questions": "40"
+      }
+    ]
+  }

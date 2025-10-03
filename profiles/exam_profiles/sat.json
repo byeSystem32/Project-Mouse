@@ -1,0 +1,21 @@
+{
+    "exam_name": "SAT",
+    "sections": [
+      {
+        "section_name": "English Mod 1",
+        "number_of_questions": "27"
+      },
+      {
+        "section_name": "English Mod 2",
+        "number_of_questions": "27"
+      },
+      {
+        "section_name": "Math Mod 1",
+        "number_of_questions": "22"
+      },
+      {
+        "section_name": "Math Mod 2",
+        "number_of_questions": "22"
+      }
+    ]
+  }

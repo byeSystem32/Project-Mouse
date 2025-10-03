@@ -1,0 +1,21 @@
+{
+    "exam_name": "New ACT",
+    "sections": [
+      {
+        "section_name": "English",
+        "number_of_questions": "50"
+      },
+      {
+        "section_name": "Math",
+        "number_of_questions": "45"
+      },
+      {
+        "section_name": "Reading",
+        "number_of_questions": "36"
+      },
+      {
+        "section_name": "Science",
+        "number_of_questions": "40"
+      }
+    ]
+  }

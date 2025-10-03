@@ -1,0 +1,12 @@
+# Core dependencies
+pillow==10.4.0
+openai>=1.0.0
+
+# Raspberry Pi camera
+picamera2
+
+# OLED display
+luma.oled
+
+# GPIO handling
+gpiozero

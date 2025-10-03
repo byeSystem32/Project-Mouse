@@ -1,0 +1,18 @@
+{
+    "section": "Math Mod 1",
+    "id": "Q1",
+    "photos": [
+      {
+        "file_path": "photo1.jpg",
+        "captured_at": "2025-10-01T13:00:00Z",
+        "tags": ["prompt", "clear"],
+        "notes": "No issues detected"
+      },
+      {
+        "file_path": "photo2.jpg",
+        "captured_at": "2025-10-01T13:05:00Z",
+        "tags": ["answer choices", "blurry"],
+        "notes": "Move farther back for better focus"
+      }
+    ]
+  }
