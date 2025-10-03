@@ -4,7 +4,7 @@ from camera import Camera
 from chatgpt import send_to_chatgpt
 from ui import MenuUI
 from motor import Motor
-import wifi   # <--- NEW
+import wifi
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 TEMP_DIR = os.path.join(BASE_DIR, "../photos/temp")
@@ -19,13 +19,32 @@ def move_temp_to_main():
         dst = os.path.join(MAIN_DIR, file)
         shutil.move(src, dst)
 
-def choose_wifi(ui, buttons):
-    """Dropdown wifi profile selector"""
+# ---------------- MENU HANDLERS ---------------- #
+
+def test_device(ui, cam, motor):
+    """Tests camera + motor"""
+    try:
+        ui.show_message("Testing Camera...")
+        filename = cam.capture(TEMP_DIR)
+        time.sleep(1)
+
+        ui.show_message("Testing Motor...")
+        motor.buzz(duration=0.5, strength=0.8)
+        time.sleep(1)
+
+        ui.show_message("Completed!")
+        time.sleep(2)
+    except Exception as e:
+        ui.show_message("Test Failed:\n" + str(e))
+        time.sleep(3)
+
+def config_wifi(ui, buttons):
+    """WiFi profile selector"""
     profiles = wifi.load_profiles()
     if not profiles:
         ui.show_message("No wifi profiles")
         time.sleep(2)
-        return None
+        return
 
     idx = 0
     while True:
@@ -40,7 +59,7 @@ def choose_wifi(ui, buttons):
             if success:
                 ui.show_message(f"Connected:\n{profile['network_name']}")
                 time.sleep(2)
-                return profile
+                return
             else:
                 ui.show_message("Failed:\n" + msg)
                 time.sleep(2)
@@ -64,18 +83,36 @@ def photo_loop(ui, buttons, cam, motor):
 
         time.sleep(0.1)
 
+# ---------------- MAIN MENU ---------------- #
+
 def main():
     buttons = ButtonHandler(pin=17, hold_time=2)
     cam = Camera()
     ui = MenuUI()
     motor = Motor(pin=18)
 
-    ui.show_message("Choose WiFi")
-    chosen = choose_wifi(ui, buttons)
+    menu = ["Test Device", "Config WiFi", "Start"]
+    idx = 0
 
-    # After wifi connect, go to photo mode
-    ui.show_message("System Ready")
-    photo_loop(ui, buttons, cam, motor)
+    while True:
+        ui.show_message(f"> {menu[idx]}")  # ">" = indicator
+
+        event = buttons.wait_for_event()
+        if event == "short_press":
+            idx = (idx + 1) % len(menu)
+
+        elif event == "long_press":
+            choice = menu[idx]
+
+            if choice == "Test Device":
+                test_device(ui, cam, motor)
+
+            elif choice == "Config WiFi":
+                config_wifi(ui, buttons)
+
+            elif choice == "Start":
+                ui.show_message("System Ready")
+                photo_loop(ui, buttons, cam, motor)
 
 if __name__ == "__main__":
     main()
