@@ -1,4 +1,4 @@
-import os, time
+import time
 from evdev import InputDevice, categorize, ecodes, list_devices
 
 class ControllerHandler:
@@ -6,29 +6,27 @@ class ControllerHandler:
         self.hold_time = hold_time
         self.last_press_time = {}
 
-        # Auto-find the controller device by name
+        # Try to find the controller by name
         self.device = None
-        for dev_path in list_devices():
-            dev = InputDevice(dev_path)
+        for path in list_devices():
+            dev = InputDevice(path)
             if device_name in dev.name:
                 self.device = dev
+                print(f"[DEBUG] Controller connected: {dev.name} ({path})")
                 break
 
         if not self.device:
-            raise RuntimeError("Controller not found! Make sure it's connected over Bluetooth.")
+            raise RuntimeError("Controller not found! Check Bluetooth connection.")
 
     def wait_for_event(self):
-        """
-        Blocks until a mapped controller action is detected.
-        Returns 'short_press' or 'long_press'.
-        """
+        print("[DEBUG] Waiting for controller event...")
         for event in self.device.read_loop():
             if event.type == ecodes.EV_KEY:
                 key_event = categorize(event)
                 code = key_event.keycode
+                print(f"[DEBUG] Raw controller event: {code}, state={key_event.keystate}")
 
-                # Example mapping:
-                # A button (BTN_SOUTH) = short/long press
+                # A button (BTN_SOUTH)
                 if code == "BTN_SOUTH":
                     if key_event.keystate == key_event.key_down:
                         self.last_press_time[code] = time.time()
@@ -36,15 +34,16 @@ class ControllerHandler:
                         press_time = self.last_press_time.get(code, time.time())
                         held = time.time() - press_time
                         self.last_press_time[code] = None
-                        if held >= self.hold_time:
-                            return "long_press"
-                        else:
-                            return "short_press"
+                        event_type = "long_press" if held >= self.hold_time else "short_press"
+                        print(f"[DEBUG] Controller event: {event_type} (held {held:.2f}s)")
+                        return event_type
 
-                # D-pad down = short_press (cycle down in menu)
+                # D-pad down = short_press
                 if code == "BTN_DPAD_DOWN" and key_event.keystate == key_event.key_down:
+                    print("[DEBUG] Controller D-pad down -> short_press")
                     return "short_press"
 
-                # D-pad up = (optional) could map to 'short_press_up' later
+                # D-pad up = short_press (optional extra navigation)
                 if code == "BTN_DPAD_UP" and key_event.keystate == key_event.key_down:
+                    print("[DEBUG] Controller D-pad up -> short_press")
                     return "short_press"
