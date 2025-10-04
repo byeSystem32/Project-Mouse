@@ -13,7 +13,7 @@ class MenuUI:
 
     def clear(self):
         img = Image.new("1", (self.device.width, self.device.height))
-        img = ImageOps.flip(ImageOps.mirror(img))  # ensure consistent orientation
+        img = ImageOps.flip(ImageOps.mirror(img))
         self.device.display(img)
 
     def _render_text(self, lines):
@@ -24,7 +24,9 @@ class MenuUI:
         # Draw from bottom up
         for i, line in enumerate(reversed(lines[-self.max_lines:])):
             y = self.device.height - (i + 1) * self.line_height
-            w, h = draw.textsize(line, font=self.font)
+            # Use textbbox instead of textsize
+            bbox = draw.textbbox((0, 0), line, font=self.font)
+            w = bbox[2] - bbox[0]
             x = self.device.width - w  # right aligned
             draw.text((x, y), line, font=self.font, fill=255)
 
