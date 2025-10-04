@@ -14,7 +14,7 @@ MAIN_DIR = os.path.join(BASE_DIR, "../photos/saved")
 os.makedirs(TEMP_DIR, exist_ok=True)
 os.makedirs(MAIN_DIR, exist_ok=True)
 
-SCREEN_TIMEOUT = 10  # seconds of inactivity before OLED turns off
+SCREEN_TIMEOUT = 5  # seconds of inactivity before OLED turns off
 
 def move_temp_to_main():
     for file in os.listdir(TEMP_DIR):
@@ -131,19 +131,22 @@ def photo_loop(ui, buttons, cam, motor):
 
     while True:
         if screen_on:
-            ui.show_message("Photo Mode")
+            count = len([f for f in os.listdir(TEMP_DIR) if f.endswith(".jpg")])
+            ui.show_message(f"Photo Mode\n{count} photos")
 
         event = buttons.wait_for_event()
         last_active = time.time()
 
         if not screen_on:
             screen_on = True
-            ui.show_message("Photo Mode")
+            count = len([f for f in os.listdir(TEMP_DIR) if f.endswith(".jpg")])
+            ui.show_message(f"Photo Mode\n{count} photos")
             continue
 
         if event == "click":
             filename = cam.capture(TEMP_DIR)
-            ui.show_message(f"Saved:\n{os.path.basename(filename)}")
+            count = len([f for f in os.listdir(TEMP_DIR) if f.endswith(".jpg")])
+            ui.show_message(f"Saved:\n{os.path.basename(filename)}\n{count} photos")
             motor.buzz(duration=0.2, strength=0.5)
             print(f"[DEBUG] Photo saved: {filename}")
 
@@ -159,11 +162,9 @@ def photo_loop(ui, buttons, cam, motor):
                 next_event = buttons.wait_for_event()
                 last_active = time.time()
                 if next_event == "click":
-                    ui.show_message("Photo Mode")
+                    count = len([f for f in os.listdir(TEMP_DIR) if f.endswith('.jpg')])
+                    ui.show_message(f"Photo Mode\n{count} photos")
                     break
-                elif not screen_on:
-                    screen_on = True
-                    ui.show_message(f"Result:\n{result}")
 
         if screen_on and (time.time() - last_active > SCREEN_TIMEOUT):
             ui.clear()
@@ -200,10 +201,12 @@ def main():
         if event == "click":
             idx = (idx + 1) % len(menu)
             ui.show_menu(menu, selected=idx)
+            print(f"[DEBUG] Menu index changed to {idx}")
 
         elif event == "hold":
             choice = menu[idx]
             ui.show_message(f"Selected:\n{choice}")
+            print(f"[DEBUG] Menu choice selected: {choice}")
             time.sleep(0.5)
             if choice == "Test Device":
                 test_device(ui, cam, motor)

@@ -21,10 +21,12 @@ class MenuUI:
         img = Image.new("1", (self.device.width, self.device.height))
         draw = ImageDraw.Draw(img)
 
+        # Shift text up by 2px so bottom isn't cut off
+        offset_y = -2
+
         # Draw from bottom up
         for i, line in enumerate(reversed(lines[-self.max_lines:])):
-            y = self.device.height - (i + 1) * self.line_height
-            # Use textbbox instead of textsize
+            y = self.device.height - (i + 1) * self.line_height + offset_y
             bbox = draw.textbbox((0, 0), line, font=self.font)
             w = bbox[2] - bbox[0]
             x = self.device.width - w  # right aligned
